@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset=utf-8>
+    <title>HTML5 Demo: geolocation</title>
+    <link rel="stylesheet" href="./stylesheets/html5demos.css">
+<body>
+<section id="wrapper">
+    <header>
+        <h1>geolocation</h1>
+    </header>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <!--<script type="text/javascript" src="./javascripts/googleMapApi.js"></script>-->
+    <article>
+        <p>Finding your location: <span id="status">checking...</span></p>
+        <div>
+            <input id="address"  value="当前位置"/>
+            <input type="button" value="搜索地点" onclick="codeAddress()" id="search">
+        </div>
+        <div>
+            <b>Start: </b>
+            <input id="start"  >
+            <b>End: </b>
+            <input id="end" >
+            <select id="method"  >
+                <option value="DRIVING">开车</option>
+                <option value="WALKING">步行</option>
+            </select>
+            <input type="button" value="搜索路线" onclick="calcRoute()" id="searchRoute">
+        </div>
+    </article>
+
+    <script>
+        var geocoder;
+        var map;
+        var directionsService = new google.maps.DirectionsService();
+        var directionsDisplay = new google.maps.DirectionsRenderer();
+        function success(position) {
+            var s = document.querySelector('#status');//获取元素节点
+            if (s.className == 'success') {
+                // not sure why we're hitting this twice in FF, I think it's to do with a cached result coming back
+                return;
+            }
+            s.innerHTML = "found you!";
+            s.className = 'success';
+            var mapcanvas = document.createElement('div');//创建显示地图的div
+            mapcanvas.id = 'mapcanvas';
+            mapcanvas.style.height = '400px';//设置地图显示区域的大小
+            mapcanvas.style.width = '760px';
+
+            document.querySelector('article').appendChild(mapcanvas);
+            console.log("postion : ",position );
+            geocoder = new google.maps.Geocoder();//google.maps.Geocoder 对象，访问 Google Maps API 地址解析服务
+            var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            //获取经纬度创建google.maps.LatLng实例
+            var myOptions = {   //地图设置
+                zoom: 15,  //缩放级别
+                center: latlng,//地图中心点位置
+                mapTypeControl: false,//是否显示地图的类型，地图或卫星是否显示地形等
+                navigationControlOptions: {style: google.maps.NavigationControlStyle.SMALL },//地图的放大缩小功能类型{DEFAULT ,DEFAULT}
+                mapTypeId: google.maps.MapTypeId.ROADMAP//默认的2D地图类型还有{SATELLITE ,HYBRID ,TERRAIN}
+            };
+
+            //googleMap  api接口文档 https://developers.google.com/maps/documentation/javascript/tutorial
+            map = new google.maps.Map(document.getElementById("mapcanvas"), myOptions);
+
+            var marker = new google.maps.Marker({ //设置地图标记的参数
+                position: latlng,//标记的位置
+                map: map,
+                title:"You are here! (at least within a "+position.coords.accuracy+" meter radius)"
+            });
+            google.maps.event.addListener(marker, 'click', function() { //添加监听事件
+                map.setZoom(20);
+            });
+        }
+
+        function error(msg) {
+            var s = document.querySelector('#status');
+            s.innerHTML = typeof msg == 'string' ? msg : "failed";
+            s.className = 'fail';
+            // console.log(arguments);
+        }
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(success, error);
+        } else {
+            error('not supported');
+        }
+//地址解析api文档接口：https://developers.google.com/maps/documentation/javascript/services?hl=zh-CN#Geocoding
+        function codeAddress() {
+            var address = document.getElementById("address").value;
+            geocoder.geocode( { 'address': address}, function(results, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                    console.log("the result is : ",results);
+                    map.setCenter(results[0].geometry.location);//设置中心点
+                    var marker = new google.maps.Marker({  //添加中心点标记
+                        map: map,
+                        position: results[0].geometry.location //中心点位置
+                    });
+                } else {
+                    alert("未搜索到您输入的地址，请重新输入！！！！");
+                    console.log("Geocode was not successful for the following reason: " + status);
+                }
+            });
+        }
+//搜索行车路线
+        function calcRoute() {
+            directionsDisplay.setMap(map);
+            var start = document.getElementById("start").value;//获取用户输入的出发点位置
+            var end = document.getElementById("end").value;//获取用户输入的到达位置
+            var method=document.getElementById("method").value;//获取用户选择的出行方式
+            var request = {
+                origin:start,//起点
+                destination:end//终点
+            };
+            if(method=="DRIVING"){
+                request.travelMode=google.maps.TravelMode.DRIVING;//出行方式为开车
+            }else{
+                request.travelMode=google.maps.TravelMode.WALKING;//出行方式为步行
+            }
+            directionsService.route(request, function(result, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsDisplay.setDirections(result);//展示搜索到的路线
+                }else{
+                    alert("未搜索到您需要的路线，请重新输入！！！！");
+                    console.log("Geocode was not successful for the following reason: " + status);
+                }
+            });
+        }
+    </script>
+</section>
+</body>
+</html>
