@@ -1,0 +1,45 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>touch and drag</title>
+    <meta name="viewport" content="width=device-width" />
+    <style type="text/css">
+        #box {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            padding: 30px;
+            font-family: Arial;
+            background: pink;
+            border: 1px solid purple;
+            -webkit-border-radius: 5px;
+        }
+    </style>
+    <script type="text/javascript">
+        window.addEventListener('load', function() {
+            var b = document.getElementById('box'),
+                    xbox = b.offsetWidth  / 2,
+                    ybox = b.offsetHeight / 2,
+                    bstyle = b.style;
+
+            b.addEventListener('touchmove', function(event) {
+                event.preventDefault();
+                b.innerHTML="event.targetTouches[0].pageX : "+event.targetTouches[0].pageX+"</br>"+
+                        "event.targetTouches[0].clientX :"+event.targetTouches[0].clientX +"</br>"+
+                        "event.targetTouches[0].screenX :"+event.targetTouches[0].screenX+"</br>"+
+                        "event.targetTouches[0].identifier :"+event.targetTouches[0].identifier;
+                bstyle.left =  event.targetTouches[0].pageX - xbox + 'px';
+                bstyle.top =   event.targetTouches[0].pageY - ybox + 'px';
+            }, false);
+        }, false);
+    </script>
+</head>
+<body>
+
+<div id="box">drag</div>
+
+</body>
+</html>
